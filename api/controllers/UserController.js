@@ -8,6 +8,20 @@
  */
 
 module.exports = {
+  'getUserList': function (req, res){
 
+  },
+  'getUser': function (req, res){
+
+  },
+  'addUser': function (req, res){
+
+  },
+  'editUser': function (req, res){
+
+  },
+  'deleteUser': function (req, res){
+
+  }
 };
 

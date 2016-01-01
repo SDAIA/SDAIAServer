@@ -1,3 +1,5 @@
+/*jshint enforceall: true, esnext: true, node: true*/
+
 /**
  * Route Mappings
  * (sails.config.routes)
@@ -32,9 +34,7 @@ module.exports.routes = {
   *                                                                          *
   ***************************************************************************/
 
-  '/': {
-    view: 'homepage'
-  }
+  '/api': 'ApiController.getWelcomeMessage',
 
   /***************************************************************************
   *                                                                          *
@@ -45,5 +45,7 @@ module.exports.routes = {
   * for configuration options and examples.                                  *
   *                                                                          *
   ***************************************************************************/
+
+  'get /api/users': 'UserController.getUserList'
 
 };
