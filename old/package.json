@@ -1,0 +1,32 @@
+{
+  "name": "sdaia-server",
+  "version": "0.0.0",
+  "description": "Server for Sistema Distribuido de Aplicaciones de Inteligencia Artificial (In Spanish, Distributed System of Artificial Intelligence Applications)",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/SDAIA/SDAIAServer.git"
+  },
+  "keywords": [
+    "aiml",
+    "ai",
+    "server",
+    "distributed"
+  ],
+  "author": "Ángel González",
+  "license": "GPL-2.0",
+  "bugs": {
+    "url": "https://github.com/SDAIA/SDAIAServer/issues"
+  },
+  "homepage": "https://github.com/SDAIA/SDAIAServer#readme",
+  "dependencies": {
+    "body-parser": "^1.14.1",
+    "express": "^4.13.3",
+    "mongoose": "^4.2.10",
+    "node-java": "^1.0.1",
+    "swaggerize-express": "^4.0.5"
+  }
+}
