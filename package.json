@@ -30,8 +30,8 @@
   "main": "app.js",
   "repository": {
     "type": "git",
-    "url": "git://github.com/angel/SDAIAServer.git"
+    "url": "git://github.com/SDAIA/SDAIAServer.git"
   },
-  "author": "angel",
-  "license": ""
+  "author": "Ángel González",
+  "license": "GPL-2.0"
 }

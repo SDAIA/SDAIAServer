@@ -1,3 +1,5 @@
+/*jshint enforceall: true, esnext: true, node: true*/
+
 /**
  * UserController
  *
