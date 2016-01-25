@@ -12,7 +12,7 @@ module.exports = {
   'getWelcomeMessage': function (req, res){
     return res.json({
       message: "Welcome to SDAIA api.",
-      version: "0.0.0 - 20160101"
+      version: "0.0.0 - 20160125"
     });
   }
 };
