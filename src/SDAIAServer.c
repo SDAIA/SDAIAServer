@@ -3,7 +3,8 @@
 int init()
 {
     //TODO: Start connection to MySQL.
-    kore_log(0,"TODO: MySQL connection.");
+    read_mysql_cfg("conf/mysql.conf", my_db_cfg);
+    kore_log(LOG_NOTICE, my_db_cfg.database);
     return (KORE_RESULT_OK);
 }
 
