@@ -3,8 +3,12 @@
 int init()
 {
     //TODO: Start connection to MySQL.
-    read_mysql_cfg("conf/mysql.conf", my_db_cfg);
-    kore_log(LOG_NOTICE, my_db_cfg.database);
+    if(read_mysql_cfg("conf/mysql.conf", my_db_cfg) != 0)
+    {
+		kore_log(LOG_ERR, "MySQL database configuration file is required to work. Sending quit signal to parent.");
+		kill(getppid(), SIGQUIT);
+		exit(ERR_NO_REQUIRED);
+	}
     return (KORE_RESULT_OK);
 }
 
