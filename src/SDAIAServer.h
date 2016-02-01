@@ -13,10 +13,7 @@
 
 #define SDAIA_SERVER_H_
 
-#define FIN_OK 0
-#define ERR_NO_REQUIRED 1
-
-int init(void);
+int load_prereq(void);
 int get_index_page(struct http_request *);
 
 #endif //SDAIA_SERVER_H_

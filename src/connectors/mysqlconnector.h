@@ -3,14 +3,9 @@
 #include <kore/kore.h>
 #include <kore/http.h>
 #include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/mman.h>
-#include <errno.h>
-#include <err.h>
 #include <mysql/mysql.h>
+#include <libconfig.h>
+#include "paths.h"
 
 #define MYSQL_CONNECTOR_H_
 
@@ -19,10 +14,10 @@
 
 typedef struct
 {
-    char *server;
-    char *user;
-    char *password;
-    char *database;
+    const char *server;
+    const char *user;
+    const char *password;
+    const char *database;
 } DB_CONN_CFG;
 
 MYSQL * my_conn;
