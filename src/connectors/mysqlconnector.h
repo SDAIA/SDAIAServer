@@ -3,6 +3,7 @@
 #include <kore/kore.h>
 #include <kore/http.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <mysql/mysql.h>
 #include <libconfig.h>
 #include "paths.h"
@@ -21,15 +22,15 @@ typedef struct
     const char *user;
     const char *password;
     const char *database;
-    unsigned int port;
+    int32_t port;
     const char *unix_socket;
-    unsigned long flags;
+    long long flags;
 } DB_CONN_CFG;
 
 MYSQL * my_conn;
 MYSQL_RES * my_res;
 MYSQL_ROW my_row;
-DB_CONN_CFG my_db_cfg = {NULL, NULL, NULL, NULL, 0, NULL, 0};
+DB_CONN_CFG my_db_cfg;
 
 int read_mysql_cfg(char *, DB_CONN_CFG);
 int connect_mysql(MYSQL *, DB_CONN_CFG);
