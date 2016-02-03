@@ -3,7 +3,7 @@
 
 int api_info(struct http_request *req)
 {
-    const char * str_api_info = gen_api_info_str();
+    char * str_api_info = gen_api_info_str();
     //JSON content.
     //http_response_header(req, "Content-Type", "text/plain");
     http_response(req, 200, str_api_info, (unsigned)strlen(str_api_info));
