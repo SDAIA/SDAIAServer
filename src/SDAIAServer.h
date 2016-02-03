@@ -13,9 +13,7 @@
 
 #define SDAIA_SERVER_H_
 
-//Global vars.
-DB_CONN_CFG *db_cfg;
-MYSQL *connection;
+static DB_CONN_CFG *db_cfg;
 
 int load_prereq(void);
 int get_index_page(struct http_request *);

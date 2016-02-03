@@ -1,6 +1,6 @@
 #include "mysqlconnector.h"
 
-int read_mysql_cfg(char * cfg_file_name, DB_CONN_CFG* db_conn_cfg)
+int init_mysql_cfg(char * cfg_file_name, DB_CONN_CFG* db_conn_cfg)
 {
     config_t cfg;
     db_conn_cfg = malloc(sizeof(DB_CONN_CFG));
@@ -62,10 +62,10 @@ int read_mysql_cfg(char * cfg_file_name, DB_CONN_CFG* db_conn_cfg)
     return(MYSQL_OK);
 }
 
-int connect_mysql(MYSQL *conn, DB_CONN_CFG *db_conn_cfg)
-{
-    conn = mysql_init(NULL);
-    // Worker crashes when calls mysql_real_connect. (?)
+//int connect_mysql(MYSQL *conn, DB_CONN_CFG *db_conn_cfg)
+//{
+    //conn = mysql_init(conn);
+    //// Worker crashes when calls mysql_real_connect. (?)
     //if(!mysql_real_connect(conn, db_conn_cfg->server, db_conn_cfg->user,
         //db_conn_cfg->password, db_conn_cfg->database, db_conn_cfg->port,
         //db_conn_cfg->unix_socket, db_conn_cfg->flags))
@@ -74,10 +74,9 @@ int connect_mysql(MYSQL *conn, DB_CONN_CFG *db_conn_cfg)
         //return(MYSQL_CONNECT_ERR);
     //}
     //return(MYSQL_OK);
-    return(MYSQL_OK);
-}
+//}
 
-int close_mysql(MYSQL * conn)
-{
-    return 0;
-}
+//int close_mysql(MYSQL * conn)
+//{
+    //return 0;
+//}
