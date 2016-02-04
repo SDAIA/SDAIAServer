@@ -3,6 +3,8 @@
 #include "apiv1/info.h"
 #include "apiv1/users.h"
 #include "assets.h"
+#include "connectors/mysqlconnector.h"
+
 
 #define API_V1_H_
 

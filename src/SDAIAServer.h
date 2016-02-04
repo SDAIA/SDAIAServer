@@ -13,8 +13,6 @@
 
 #define SDAIA_SERVER_H_
 
-static DB_CONN_CFG *db_cfg;
-
 int load_prereq(void);
 int get_index_page(struct http_request *);
 

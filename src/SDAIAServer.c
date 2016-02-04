@@ -5,7 +5,7 @@ int load_prereq()
     //TODO: Start connection to MySQL.
     //Set NULL to MYSQL connection to avoid crashes.
 
-    if(init_mysql_cfg(MYSQL_CFG_PATH, db_cfg) != 0)
+    if(init_mysql_cfg(MYSQL_CFG_PATH) != 0)
     {
         kore_log(LOG_ERR,
             "MySQL database configuration file is required to work. SIGQUIT to parent.");
