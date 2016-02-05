@@ -6,9 +6,18 @@
 #include <stdlib.h>
 #include <mysql/mysql.h>
 #include <libconfig.h>
+#include <limits.h>
 #include "paths.h"
 
 #define MYSQL_CONNECTOR_H_
+
+/* Max length of user, password and database name in MySQL.
+ * Before 5.7.8 -> 16
+ * After 5.7.8 -> 32
+ */
+#define MAX_LENGTH_USER 16
+#define MAX_LENGTH_PASS 16
+#define MAX_LENGTH_DB_NAME 64
 
 #define REQ_STATE_INIT 0
 #define REQ_STATE_QUERY 1
@@ -23,16 +32,16 @@
 
 typedef struct
 {
-    const char *server;
-    const char *user;
-    const char *password;
-    const char *database;
+    char *server;
+    char *user;
+    char *password;
+    char *database;
     int32_t port;
-    const char *unix_socket;
+    char *unix_socket;
     long long flags;
 } DB_CONN_CFG;
 
-DB_CONN_CFG *db_cfg;
+DB_CONN_CFG db_cfg;
 
 struct rstate
 {
@@ -56,17 +65,30 @@ static int mysql_request_perform_init(struct http_request *req)
         state = req->hdlr_extra;
     }
 
+    kore_log(LOG_DEBUG, "Server: %s\nUser: %s\nDatabase: %s\nPort: %d\nSocket: %s\n",
+        db_cfg.server, db_cfg.user, db_cfg.database, db_cfg.port, db_cfg.unix_socket);
+
     /* Initialize MySQL */
     memcpy(&state->sql, mysql_init(&state->sql), sizeof(MYSQL));
-    //state->sql = mysql_init(&state->sql);
-    if(!mysql_real_connect(&state->sql, db_cfg->server, db_cfg->user,
-        db_cfg->password, db_cfg->database, db_cfg->port,
-        db_cfg->unix_socket, db_cfg->flags))
+    if(&state->sql == NULL)
     {
         kore_log(LOG_ERR, "%s\n", mysql_error(&state->sql));
-        return(MYSQL_CONNECT_ERR);
     }
-    return(MYSQL_OK);
+    if(!mysql_real_connect(&state->sql, db_cfg.server, db_cfg.user,
+        db_cfg.password, db_cfg.database, db_cfg.port,
+        db_cfg.unix_socket, db_cfg.flags))
+    {
+        kore_log(LOG_ERR, "%s\n", mysql_error(&state->sql));
+        mysql_close(&state->sql);
+        req->fsm_state = REQ_STATE_ERROR;
+    }
+    else
+    {
+        kore_log(LOG_NOTICE, "Connected to MySQL database.");
+        req->fsm_state = REQ_STATE_QUERY;
+    }
+
+    return(HTTP_STATE_CONTINUE);
 }
 
 static int mysql_request_perform_query(struct http_request *req)
