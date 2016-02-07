@@ -12,16 +12,9 @@ struct http_state mysql_states[] = {
 int init_mysql_cfg(char * cfg_file_name)
 {
     config_t cfg;
-
     const char *server, *user, *password, *database, *unix_socket;
-
-    ////Assign memory to strings in cfg struct.
-    //db_cfg.server = kore_malloc(sizeof(char) * HOST_NAME_MAX);
-    //db_cfg.user = kore_malloc(sizeof(char) * MAX_LENGTH_USER);
-    //db_cfg.password = kore_malloc(sizeof(char) * MAX_LENGTH_PASS);
-    //db_cfg.database = kore_malloc(sizeof(char) * MAX_LENGTH_DB_NAME);
-    //db_cfg.unix_socket = kore_malloc(sizeof(char) * PATH_MAX);
-
+    int port_cfg_ret, sock_cfg_ret;
+    
     config_init(&cfg);
 
     if(!config_read_file(&cfg, cfg_file_name))
@@ -33,71 +26,56 @@ int init_mysql_cfg(char * cfg_file_name)
         config_destroy(&cfg);
         return(MYSQL_READ_ERR);
     }
-
-    if(config_lookup_string(&cfg, "server", &server))
-    {
-        db_cfg.server = kore_malloc(sizeof(char) * HOST_NAME_MAX);
-        strcpy(db_cfg.server, server);
+    
+    if(config_lookup_string(&cfg, "server", &server) &&
+		config_lookup_string(&cfg, "user", &user) &&
+		config_lookup_string(&cfg, "password", &password) &&
+		config_lookup_string(&cfg, "database", &database))
+	{
+		db_cfg.server = kore_malloc(sizeof(char) * HOST_NAME_MAX);
+		db_cfg.user = kore_malloc(sizeof(char) * MAX_LENGTH_USER);
+		db_cfg.password = kore_malloc(sizeof(char) * MAX_LENGTH_PASS);
+		db_cfg.database = kore_malloc(sizeof(char) * MAX_LENGTH_DB_NAME);
+		strcpy(db_cfg.server, server);
+		strcpy(db_cfg.user, user);
+		strcpy(db_cfg.password, password);
+		strcpy(db_cfg.database, database);
+	}
+	else
+	{
+		kore_log(LOG_ERR, "In init_mysql_cfg: Lack of required configuration elements.");
+        config_destroy(&cfg);
+        return(MYSQL_CFG_ERR);
     }
-    else
-    {
-        kore_log(LOG_WARNING, "In init_mysql_cfg: server is not defined in conf.");
-        db_cfg.server = NULL;
-    }
-
-    if(config_lookup_string(&cfg, "user", &user))
-    {
-        db_cfg.user = kore_malloc(sizeof(char) * MAX_LENGTH_USER);
-        strcpy(db_cfg.user, user);
-    }
-    else
-    {
-        kore_log(LOG_WARNING, "In init_mysql_cfg: user is not defined in conf.");
-        db_cfg.user = NULL;
-    }
-
-    if(config_lookup_string(&cfg, "password", &password))
-    {
-        db_cfg.password = kore_malloc(sizeof(char) * MAX_LENGTH_PASS);
-        strcpy(db_cfg.password, password);
-    }
-    else
-    {
-        kore_log(LOG_WARNING, "In init_mysql_cfg: password is not defined in conf.");
-        db_cfg.password = NULL;
-    }
-
-    if(config_lookup_string(&cfg, "database", &database))
-    {
-        db_cfg.database = kore_malloc(sizeof(char) * MAX_LENGTH_DB_NAME);
-        strcpy(db_cfg.database, database);
-    }
-    else
-    {
-        kore_log(LOG_WARNING, "In init_mysql_cfg: database is not defined in conf.");
-        db_cfg.database = NULL;
-    }
-
-    if(!config_lookup_int(&cfg, "port", &db_cfg.port))
-    {
-        kore_log(LOG_WARNING, "In init_mysql_cfg: port is not defined in conf.");
-        db_cfg.port = 0;
-    }
-
-    if(config_lookup_string(&cfg, "unix_socket", &unix_socket))
-    {
-        db_cfg.unix_socket = kore_malloc(sizeof(char) * PATH_MAX);
+    
+    port_cfg_ret = config_lookup_int(&cfg, "port", &db_cfg.port);
+    sock_cfg_ret = config_lookup_string(&cfg, "unix_socket", &unix_socket);
+    
+    if(!port_cfg_ret && !sock_cfg_ret)
+	{
+		kore_log(LOG_ERR, "In init_mysql_cfg: Lack of port or unix_socket configuration elements.");
+		config_destroy(&cfg);
+		return(MYSQL_CFG_ERR);
+	}
+	
+	if(sock_cfg_ret)
+	{
+		db_cfg.unix_socket = kore_malloc(sizeof(char) * PATH_MAX);
         strcpy(db_cfg.unix_socket, unix_socket);
     }
     else
     {
-        kore_log(LOG_WARNING, "In init_mysql_cfg: unix_socket is not defined in conf.");
-        db_cfg.unix_socket = NULL;
-    }
+		db_cfg.unix_socket = NULL;
+	}
+	
+	if(!port_cfg_ret)
+	{
+		db_cfg.port = 0;
+	}
 
     if(!config_lookup_int64(&cfg, "flags", &db_cfg.flags))
     {
-        kore_log(LOG_WARNING, "In init_mysql_cfg: flags is not defined in conf.");
+        kore_log(LOG_WARNING, "In init_mysql_cfg: Variable flags is not defined in conf.");
         db_cfg.flags = 0;
     }
 

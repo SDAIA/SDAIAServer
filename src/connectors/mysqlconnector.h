@@ -28,7 +28,8 @@
 
 #define MYSQL_OK 0
 #define MYSQL_READ_ERR 1
-#define MYSQL_CONNECT_ERR 2
+#define MYSQL_CFG_ERR 2
+#define MYSQL_CONNECT_ERR 3
 
 typedef struct
 {

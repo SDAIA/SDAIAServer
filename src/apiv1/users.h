@@ -2,6 +2,7 @@
 
 #include <kore/kore.h>
 #include <kore/http.h>
+#include "connectors/mysqlconnector.h"
 
 #define USERS_H_
 
