@@ -3,6 +3,7 @@
 #include <kore/kore.h>
 #include <kore/http.h>
 #include <json/json.h>
+#include "prettycodes.h"
 
 #define JSON_MESSAGES_H_
 
