@@ -8,6 +8,7 @@
 #include <libconfig.h>
 #include <limits.h>
 #include "paths.h"
+#include "utils/strsplit.h"
 
 #define MYSQL_CONNECTOR_H_
 
@@ -75,9 +76,9 @@ static int mysql_request_perform_init(struct http_request *req)
     {
         kore_log(LOG_ERR, "%s\n", mysql_error(&state->sql));
     }
-    if(!mysql_real_connect(&state->sql, db_cfg.server, db_cfg.user,
+    if(mysql_real_connect(&state->sql, db_cfg.server, db_cfg.user,
         db_cfg.password, db_cfg.database, db_cfg.port,
-        db_cfg.unix_socket, db_cfg.flags))
+        db_cfg.unix_socket, db_cfg.flags) == NULL)
     {
         kore_log(LOG_ERR, "%s\n", mysql_error(&state->sql));
         mysql_close(&state->sql);
@@ -94,6 +95,23 @@ static int mysql_request_perform_init(struct http_request *req)
 
 static int mysql_request_perform_query(struct http_request *req)
 {
+    struct rstate *state = req->hdlr_extra;
+    char **tokens = str_split(req->path, '/');
+    char *sql_statement;
+
+    switch(req->method)
+    {
+        case HTTP_METHOD_GET:
+            //sql_method = "SELECT";
+            break;
+        case HTTP_METHOD_POST:
+            //sql_method = "INSERT"
+            break;
+        case HTTP_METHOD_PUT:
+            break;
+        case HTTP_METHOD_DELETE:
+            break;
+    }
     return(MYSQL_OK);
 }
 

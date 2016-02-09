@@ -113,4 +113,4 @@ static const char * pretty_codes(int http_codes)
 	}
 }
 
-#endif // JSON_MESSAGES_H_
+#endif // PRETTY_CODES_H_
