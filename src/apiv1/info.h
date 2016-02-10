@@ -2,6 +2,7 @@
 
 #include <kore/kore.h>
 #include <kore/http.h>
+#include "utils/jsonmessages.h"
 
 #define INFO_H_
 

@@ -1,2 +1,5 @@
 [Mon, 08 Feb 2016 08:55:51 GMT] 127.0.0.1 404 GET /sdaia-api/users (w#0) (0ms) (none) (Mozilla/5.0 (X11; Linux x86_64; rv:45.0) Gecko/20100101 Firefox/45.0 Iceweasel/45.0a2)
 [Mon, 08 Feb 2016 08:55:53 GMT] 127.0.0.1 404 GET /sdaia-api/users (w#0) (1ms) (none) (Mozilla/5.0 (X11; Linux x86_64; rv:45.0) Gecko/20100101 Firefox/45.0 Iceweasel/45.0a2)
+[Wed, 10 Feb 2016 13:52:25 GMT] 127.0.0.1 200 GET / (w#1) (0ms) (none) (Mozilla/5.0 (X11; Linux x86_64; rv:45.0) Gecko/20100101 Firefox/45.0 Iceweasel/45.0a2)
+[Wed, 10 Feb 2016 13:52:40 GMT] 127.0.0.1 200 GET /sdaia-api (w#1) (0ms) (none) (Mozilla/5.0 (X11; Linux x86_64; rv:45.0) Gecko/20100101 Firefox/45.0 Iceweasel/45.0a2)
+[Wed, 10 Feb 2016 13:52:56 GMT] 127.0.0.1 404 GET /sdaia-api/users (w#1) (0ms) (none) (Mozilla/5.0 (X11; Linux x86_64; rv:45.0) Gecko/20100101 Firefox/45.0 Iceweasel/45.0a2)

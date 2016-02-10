@@ -9,6 +9,7 @@
 #include <limits.h>
 #include "paths.h"
 #include "utils/strsplit.h"
+#include "utils/jsonmessages.h"
 
 #define MYSQL_CONNECTOR_H_
 
@@ -19,7 +20,10 @@
 #define MAX_LENGTH_USER 16
 #define MAX_LENGTH_PASS 16
 #define MAX_LENGTH_DB_NAME 64
-//Memory allowed for queries can be from 1MB to 1GB in latest MySQL versions. Modify this as your choice. (in chars).
+/* Memory allowed for queries can be from 1MB to 1GB in 
+ * latest MySQL versions. Modify this as your choice.
+ * (in chars). Check size of char for exact bytes.
+ */
 #define MAX_LENGTH_QUERY 4096
 
 #define REQ_STATE_INIT 0
@@ -32,14 +36,7 @@
 #define REQ_STATE_DONE 7
 #define REQ_STATE_ERROR 8
 
-/*#define REQ_STATE_INIT 0
-#define REQ_STATE_QUERY 1
-#define REQ_STATE_DB_WAIT 2
-#define REQ_STATE_DB_READ 3
-#define REQ_STATE_ERROR 4
-#define REQ_STATE_DONE 5*/
-
-#define MYSQL_OK 0
+#define MYSQL_READ_OK 0
 #define MYSQL_READ_ERR 1
 #define MYSQL_CFG_ERR 2
 
@@ -138,7 +135,7 @@ static int mysql_request_perform_select(struct http_request *req)
     struct rstate *state = req->hdlr_extra;
     
     char *sql_statement = kore_malloc(sizeof(char) * MAX_LENGTH_QUERY);
-    char **path_tokens = str_split(req->path);
+    char **path_tokens = str_split(req->path, '\/');
     char *table = NULL;
     char *id = NULL;
     char *columns = NULL;
@@ -167,11 +164,11 @@ static int mysql_request_perform_select(struct http_request *req)
     if(table == "users"){
         if(adm == "1")
         {
-            columns = "userid, username, email, create_time, groupname";
+            columns = "userid, username, email, create_time, GROUP_CONCAT(groupname SEPARATOR \',\')";
         }
         else
         {
-            columns = "userid, username, create_time, groupname";
+            columns = "userid, username, create_time, GROUP_CONCAT(groupname SEPARATOR \',\')";
         }
     }
     else
@@ -185,7 +182,8 @@ static int mysql_request_perform_select(struct http_request *req)
     strcat(sql_statement, table);
     if(table == "users")
     {
-        strcat(sql_statement, " JOIN (groups) ON (users.groups_groupid = groups.groupid)");
+		strcat(sql_statement, " INNER JOIN users_has_groups ug ON users.userid = ug.users_userid");
+		strcat(sql_statement, " INNER JOIN groups ON groups.groupid = ug.groups_groupid");
         if(id)
         {
             strcat(sql_statement, " WHERE userid = ");
@@ -209,11 +207,10 @@ static int mysql_request_perform_getdata(struct http_request *req)
     struct rstate *state = req->hdlr_extra;
     
     MYSQL_RES *result;
-    MYSQL_ROW row;
-    int num_fields, i;
+    char *json_result;
     
     result = mysql_store_result(&state->sql);
-    num_fields = mysql_num_fields(result);
+    json_result = gen_mysql_result(result);
     
     
     

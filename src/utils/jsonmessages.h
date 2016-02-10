@@ -9,6 +9,9 @@
 
 const char * gen_api_info_str(void);
 
+/* MYSQL RESULTS */
+const char * gen_mysql_result(MYSQL_RES *);
+
 /* HTTP ERROR STATUS */ 
 const char * gen_api_err_forbidden(struct http_request *); //403
 const char * gen_api_err_notfound(struct http_request *); //404

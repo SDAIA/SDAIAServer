@@ -86,5 +86,5 @@ int init_mysql_cfg(char * cfg_file_name)
         db_cfg.server, db_cfg.user, db_cfg.database, db_cfg.port, db_cfg.unix_socket);
 
     config_destroy(&cfg);
-    return(MYSQL_OK);
+    return(MYSQL_READ_OK);
 }
