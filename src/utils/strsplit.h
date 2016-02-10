@@ -1,7 +1,5 @@
 #ifndef STR_SPLIT_H_
 
-#include <kore/kore.h>
-#include <kore/http.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -32,7 +30,7 @@ static char* str_split(char *a_str, const char a_delim)
     count += last < (a_str + strlen(a_str) -1);
     count++;
 
-    result = kore_malloc(sizeof(char*) * count);
+    result = malloc(sizeof(char*) * count);
 
     if(result)
     {

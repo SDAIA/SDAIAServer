@@ -1,12 +1,15 @@
 #include "mysqlconnector.h"
 
 struct http_state mysql_states[] = {
-        {"REQ_STATE_INIT", mysql_request_perform_init},
-        {"REQ_STATE_QUERY", mysql_request_perform_query},
-        {"REQ_STATE_DB_WAIT", mysql_request_db_wait},
-        {"REQ_STATE_DB_READ", mysql_request_db_read},
-        {"REQ_STATE_ERROR", mysql_request_error},
-        {"REQ_STATE_DONE", mysql_request_done},
+    {"REQ_STATE_INIT", mysql_request_perform_init},
+    {"REQ_STATE_SWITCH", mysql_request_perform_switch},
+    {"REQ_STATE_SELECT", },
+    {"REQ_STATE_GETDATA", },
+    {"REQ_STATE_INSERT", },
+    {"REQ_STATE_UPDATE", },
+    {"REQ_STATE_DELETE", },
+    {"REQ_STATE_DONE", },
+    {"REQ_STATE_ERROR", }
 };
 
 int init_mysql_cfg(char * cfg_file_name)
