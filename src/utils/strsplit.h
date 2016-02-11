@@ -7,16 +7,15 @@
 
 #define STR_SPLIT_H_
 
-static char* str_split(char *a_str, const char a_delim)
+static char** str_split(char *a_str, char a_delim)
 {
-    char **result = 0;
+    char **result = NULL;
     size_t count = 0;
     char *tmp = a_str;
-    char *last = 0;
-    char delim[2];
-    delim[0] = a_delim;
-    delim[1] = 0;
+    char *last = NULL;
+    char str_delim[] = {a_delim, '\0'};
 
+    //Count
     while(*tmp)
     {
         if(a_delim == *tmp)
@@ -27,21 +26,21 @@ static char* str_split(char *a_str, const char a_delim)
         tmp++;
     }
 
-    count += last < (a_str + strlen(a_str) -1);
+    count += last<(a_str + strlen(a_str) - 1);
     count++;
 
-    result = malloc(sizeof(char*) * count);
+    result=malloc(sizeof(char*) * count);
 
     if(result)
     {
         size_t idx = 0;
-        char *token = strsep(a_str, delim);
+        char *token = strsep(&a_str, str_delim);
 
         while(token)
         {
             assert(idx < count);
             *(result + idx++) = strdup(token);
-            token = strsep(0, delim);
+            token = strsep(&a_str, str_delim);
         }
         assert(idx == count-1);
         *(result + idx) = 0;
