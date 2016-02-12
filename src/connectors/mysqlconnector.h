@@ -186,6 +186,7 @@ static int mysql_request_perform_select(struct http_request *req)
         return(HTTP_STATE_CONTINUE);
     }
 
+    kore_mem_free(sql_statement);
     req->fsm_state = REQ_STATE_GETDATA;
     return(HTTP_STATE_CONTINUE);
 }
@@ -200,8 +201,42 @@ static int mysql_request_perform_getdata(struct http_request *req)
     result = mysql_store_result(&state->sql);
     json_result = gen_mysql_result(result);
 
+    http_response(req, 200, json_result, (unsigned)strlen(json_result));
+
+    mysql_free_result(result);
+
+    req->fsm_state = REQ_STATE_DONE;
+
+    return(HTTP_STATE_CONTINUE);
+}
+
+static int mysql_request_perform_insert(struct http_request *req)
+{
+    struct rstate *state = req->hdlr_extra;
+
+    char *sql_statement = kore_malloc(sizeof(char) * MAX_LENGTH_QUERY);
 
 
+}
+
+static int mysql_request_perform_done(struct http_request *req)
+{
+    struct rstate *state = req->hdlr_extra;
+
+    mysql_close(&state->sql);
+    return(HTTP_STATE_COMPLETE);
+}
+
+static int mysql_request_perform_error(struct http_request *req)
+{
+    struct rstate *state = req->hdlr_extra;
+
+    char *err_mysql = gen_api_err_server_mysql(req);
+
+    http_response(req, 500, err_mysql, (unsigned)strlen(err_mysql));
+
+    mysql_close(&state->sql);
+    return(HTTP_STATE_COMPLETE);
 }
 
 extern struct http_state mysql_states[9];
