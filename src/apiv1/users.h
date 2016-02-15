@@ -4,7 +4,7 @@
 #include <kore/http.h>
 #include "connectors/mysqlconnector.h"
 #include "utils/jsonmessages.h"
-#include "utils/prettycodes.h"
+//#include "utils/prettycodes.h"
 
 #define USERS_H_
 

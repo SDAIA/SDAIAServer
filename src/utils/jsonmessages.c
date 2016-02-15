@@ -94,4 +94,5 @@ const char * gen_api_err_notfound(struct http_request *req)
 
 const char * gen_api_err_server_mysql(struct http_request *req)
 {
+    return 0;
 }

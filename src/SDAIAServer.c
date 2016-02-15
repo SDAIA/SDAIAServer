@@ -2,9 +2,6 @@
 
 int load_prereq()
 {
-    //TODO: Start connection to MySQL.
-    //Set NULL to MYSQL connection to avoid crashes.
-
     if(init_mysql_cfg(MYSQL_CFG_PATH) != 0)
     {
         kore_log(LOG_ERR,
@@ -12,17 +9,6 @@ int load_prereq()
         kill(getppid(), SIGQUIT);
         exit(EXIT_FAILURE);
     }
-    //if(connect_mysql(connection, db_cfg) != 0)
-    //{
-        //kore_log(LOG_ERR,
-            //"Cannot connect to database. Check configuration file and MySQL server. SIGQUIT to parent.");
-        //kill(getppid(), SIGQUIT);
-        //exit(EXIT_FAILURE);
-    //}
-    //else
-    //{
-        //kore_log(LOG_NOTICE, "Connected to MySQL server database.");
-    //}
     return (KORE_RESULT_OK);
 }
 
