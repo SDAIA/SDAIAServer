@@ -1,13 +1,13 @@
-#include "connectors/mysqlconnector.h"
+#include "mysqlconnector.h"
 
 struct http_state mysql_states[] = {
     {"REQ_STATE_INIT", mysql_request_perform_init},
     {"REQ_STATE_SWITCH", mysql_request_perform_switch},
     {"REQ_STATE_SELECT", mysql_request_perform_select},
     {"REQ_STATE_GETDATA", mysql_request_perform_getdata},
-    {"REQ_STATE_INSERT", },
-    {"REQ_STATE_UPDATE", },
-    {"REQ_STATE_DELETE", },
+    {"REQ_STATE_INSERT", mysql_request_perform_insert},
+    {"REQ_STATE_UPDATE", mysql_request_perform_update},
+    {"REQ_STATE_DELETE", mysql_request_perform_delete},
     {"REQ_STATE_DONE", mysql_request_perform_done},
     {"REQ_STATE_ERROR", mysql_request_perform_error}
 };
@@ -55,15 +55,15 @@ int init_mysql_cfg(char * cfg_file_name)
     sock_cfg_ret = config_lookup_string(&cfg, "unix_socket", &unix_socket);
 
     if(!port_cfg_ret && !sock_cfg_ret)
-        {
-                kore_log(LOG_ERR, "In init_mysql_cfg: Lack of port or unix_socket configuration elements.");
-                config_destroy(&cfg);
-                return(MYSQL_CFG_ERR);
-        }
+    {
+            kore_log(LOG_ERR, "In init_mysql_cfg: Lack of port or unix_socket configuration elements.");
+            config_destroy(&cfg);
+            return(MYSQL_CFG_ERR);
+    }
 
-        if(sock_cfg_ret)
-        {
-                db_cfg.unix_socket = kore_malloc(sizeof(char) * PATH_MAX);
+    if(sock_cfg_ret)
+    {
+            db_cfg.unix_socket = kore_malloc(sizeof(char) * PATH_MAX);
         strcpy(db_cfg.unix_socket, unix_socket);
     }
     else
@@ -91,12 +91,12 @@ int init_mysql_cfg(char * cfg_file_name)
 
 int mysql_request_perform_init(struct http_request *req)
 {
-    struct rstate *state;
+    MYSQL *state;
 
     /* Setup state context. */
     if(req->hdlr_extra == NULL)
     {
-        state = kore_malloc(sizeof(*state));
+        state = kore_malloc(sizeof(MYSQL));
         req->hdlr_extra = state;
     }
     else
@@ -108,14 +108,14 @@ int mysql_request_perform_init(struct http_request *req)
         db_cfg.server, db_cfg.user, db_cfg.database, db_cfg.port, db_cfg.unix_socket);
 
     /* Initialize MySQL */
-    memcpy(&state->sql, mysql_init(&state->sql), sizeof(MYSQL));
-    if(&state->sql == NULL)
+    state = mysql_init(state);
+    if(state == NULL)
     {
         req->fsm_state = REQ_STATE_ERROR;
         return(HTTP_STATE_CONTINUE);
     }
 
-    if(mysql_real_connect(&state->sql, db_cfg.server, db_cfg.user,
+    if(mysql_real_connect(state, db_cfg.server, db_cfg.user,
         db_cfg.password, db_cfg.database, db_cfg.port,
         db_cfg.unix_socket, db_cfg.flags) == NULL)
     {
@@ -124,8 +124,8 @@ int mysql_request_perform_init(struct http_request *req)
     }
     else
     {
-        req->fsm_state = REQ_STATE_SWITCH;
         kore_log(LOG_NOTICE, "Connected to MySQL database.");
+        req->fsm_state = REQ_STATE_SWITCH;
     }
 
     return(HTTP_STATE_CONTINUE);
@@ -136,6 +136,7 @@ int mysql_request_perform_switch(struct http_request *req)
     //struct rstate *state = req->hdlr_extra;
 
     // Associating HTTP methods with SQL methods. (REST / CRUD API)
+    kore_log(LOG_NOTICE, "Translation REST -> SQL");
     switch(req->method)
     {
         case HTTP_METHOD_GET:
@@ -160,16 +161,20 @@ int mysql_request_perform_switch(struct http_request *req)
 
 int mysql_request_perform_select(struct http_request *req)
 {
-    struct rstate *state = req->hdlr_extra;
+    MYSQL *state = req->hdlr_extra;
 
     char *sql_statement = kore_malloc(sizeof(char) * MAX_LENGTH_QUERY);
     char **path_tokens = NULL;
-    int selector;
+    int selector = -1;
     char *table = NULL;
     char *id = NULL;
     char *adm = NULL;
 
-    kore_split_string(sql_statement, "/", path_tokens, 3);
+    kore_log(LOG_DEBUG, "Building query.");
+    kore_log(LOG_DEBUG, "%s", req->path);
+    //NEED FIX: Max priority.
+    kore_split_string(req->path, "/", path_tokens, 4);
+    kore_log(LOG_DEBUG, "Path splitted.");
     //Building query
     /* *(path_tokens + 0) == API base path
      * *(path_tokens + 1) == Table reference.
@@ -189,7 +194,8 @@ int mysql_request_perform_select(struct http_request *req)
         id = *(path_tokens + 2);
     }
 
-    http_argument_get_byte("adm", adm);
+    kore_log(LOG_DEBUG, "Checking arguments.");
+    http_argument_get_byte(req,"adm", adm);
 
     if(strcmp(table, "users"))
     {
@@ -233,7 +239,9 @@ int mysql_request_perform_select(struct http_request *req)
     strcat(sql_statement, " ;");
 
     //Exec query
-    if(mysql_query(&state->sql, sql_statement) != 0){
+    kore_log(LOG_DEBUG, "%s", sql_statement);
+    kore_log(LOG_NOTICE, "Executing select query...");
+    if(mysql_query(state, sql_statement) != 0){
         req->fsm_state = REQ_STATE_ERROR;
         return(HTTP_STATE_CONTINUE);
     }
@@ -245,12 +253,12 @@ int mysql_request_perform_select(struct http_request *req)
 
 int mysql_request_perform_getdata(struct http_request *req)
 {
-    struct rstate *state = req->hdlr_extra;
+    MYSQL *state = req->hdlr_extra;
 
     MYSQL_RES *result;
     char *json_result;
 
-    result = mysql_store_result(&state->sql);
+    result = mysql_store_result(state);
     json_result = gen_mysql_result(result);
 
     http_response(req, 200, json_result, (unsigned)strlen(json_result));
@@ -264,14 +272,15 @@ int mysql_request_perform_getdata(struct http_request *req)
 
 int mysql_request_perform_insert(struct http_request *req)
 {
-    struct rstate *state = req->hdlr_extra;
+    MYSQL *state = req->hdlr_extra;
 
     char *sql_statement = kore_malloc(sizeof(char) * MAX_LENGTH_QUERY);
     char **path_tokens = NULL;
     char *table = NULL;
     int selector;
 
-    kore_split_string(sql_statement, "/", path_tokens, 3);
+    kore_log(LOG_DEBUG, "Building query.");
+    kore_split_string(req->path, "/", path_tokens, 3);
     //Building query
     /* *(path_tokens + 0) == API base path
      * *(path_tokens + 1) == Table reference.
@@ -316,7 +325,9 @@ int mysql_request_perform_insert(struct http_request *req)
     strcat(sql_statement, ");");
 
     //Exec query
-    if(mysql_query(&state->sql, sql_statement) != 0){
+    kore_log(LOG_DEBUG, "%s", sql_statement);
+    kore_log(LOG_NOTICE, "Executing insert query.");
+    if(mysql_query(state, sql_statement) != 0){
         req->fsm_state = REQ_STATE_ERROR;
         return(HTTP_STATE_CONTINUE);
     }
@@ -329,7 +340,7 @@ int mysql_request_perform_insert(struct http_request *req)
 
 int mysql_request_perform_update(struct http_request *req)
 {
-    struct rstate *state = req->hdlr_extra;
+    MYSQL *state = req->hdlr_extra;
 
     char *sql_statement = kore_malloc(sizeof(char) * MAX_LENGTH_QUERY);
     char **path_tokens = NULL;
@@ -337,7 +348,7 @@ int mysql_request_perform_update(struct http_request *req)
     char *id = NULL;
     int selector;
 
-    kore_split_string(sql_statement, "/", path_tokens, 3);
+    kore_split_string(req->path, "/", path_tokens, 3);
     //Building query
     /* *(path_tokens + 0) == API base path
      * *(path_tokens + 1) == Table reference.
@@ -393,7 +404,8 @@ int mysql_request_perform_update(struct http_request *req)
     strcat(sql_statement, ";");
 
     //Exec query
-    if(mysql_query(&state->sql, sql_statement) != 0){
+    kore_log(LOG_NOTICE, "Executing update query...");
+    if(mysql_query(state, sql_statement) != 0){
         req->fsm_state = REQ_STATE_ERROR;
         return(HTTP_STATE_CONTINUE);
     }
@@ -405,7 +417,7 @@ int mysql_request_perform_update(struct http_request *req)
 
 int mysql_request_perform_delete(struct http_request *req)
 {
-    struct rstate *state = req->hdlr_extra;
+    MYSQL *state = req->hdlr_extra;
 
     char *sql_statement = kore_malloc(sizeof(char) * MAX_LENGTH_QUERY);
     char **path_tokens = NULL;
@@ -413,7 +425,7 @@ int mysql_request_perform_delete(struct http_request *req)
     char *id = NULL;
     int selector;
 
-    kore_split_string(sql_statement, "/", path_tokens, 3);
+    kore_split_string(req->path, "/", path_tokens, 3);
     //Building query
     /* *(path_tokens + 0) == API base path
      * *(path_tokens + 1) == Table reference.
@@ -462,12 +474,13 @@ int mysql_request_perform_delete(struct http_request *req)
     if(id)
     {
         strcat(sql_statement, id_str[selector]);
-        sstrcat(sql_statement, id);
+        strcat(sql_statement, id);
     }
     strcat(sql_statement, ";");
 
     //Exec query
-    if(mysql_query(&state->sql, sql_statement) != 0){
+    kore_log(LOG_NOTICE, "Executing delete query...");
+    if(mysql_query(state, sql_statement) != 0){
         req->fsm_state = REQ_STATE_ERROR;
         return(HTTP_STATE_CONTINUE);
     }
@@ -479,20 +492,20 @@ int mysql_request_perform_delete(struct http_request *req)
 
 int mysql_request_perform_done(struct http_request *req)
 {
-    struct rstate *state = req->hdlr_extra;
+    MYSQL *state = req->hdlr_extra;
 
-    mysql_close(&state->sql);
+    mysql_close(state);
     return(HTTP_STATE_COMPLETE);
 }
 
 int mysql_request_perform_error(struct http_request *req)
 {
-    struct rstate *state = req->hdlr_extra;
+    MYSQL *state = req->hdlr_extra;
 
     char *err_mysql = gen_api_err_server_mysql(req);
 
     http_response(req, 500, err_mysql, (unsigned)strlen(err_mysql));
 
-    mysql_close(&state->sql);
+    mysql_close(state);
     return(HTTP_STATE_COMPLETE);
 }

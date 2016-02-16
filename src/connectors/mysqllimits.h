@@ -2,6 +2,14 @@
 
 #define MYSQL_LIMITS_H_
 
+#ifndef HOST_NAME_MAX
+    #define HOST_NAME_MAX 256
+#endif
+
+#ifndef PATH_MAX
+    #define PATH_MAX 4096
+#endif
+
 /* Max length of user, password and database name in MySQL.
  * Before 5.7.8 -> 16
  * After 5.7.8 -> 32

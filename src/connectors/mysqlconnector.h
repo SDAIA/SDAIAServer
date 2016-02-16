@@ -4,7 +4,8 @@
 #include <kore/http.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <mysql/mysql.h>
+#include <my_config.h>
+#include <mysql.h>
 #include <libconfig.h>
 #include <limits.h>
 #include "paths.h"
@@ -38,15 +39,10 @@ struct DB_CONN_CFG
     long long flags;
 };
 
-struct rstate
-{
-    int cnt;
-    MYSQL sql;
-};
-
 struct DB_CONN_CFG db_cfg;
 
 int init_mysql_cfg(char *);
+
 int mysql_request_perform_init(struct http_request *);
 int mysql_request_perform_switch(struct http_request *);
 int mysql_request_perform_select(struct http_request *);
