@@ -8,7 +8,7 @@
 
 #define API_NAME "SDAIA API"
 #define API_VER "0.0.0"
-#define API_DATE "20160211"
+#define API_DATE "20160217"
 
 int api_info(struct http_request *);
 
