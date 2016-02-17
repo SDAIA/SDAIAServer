@@ -6,6 +6,10 @@
 
 #define JSON_READER_H_
 
+//AUX FUNCTIONS
+void
+
+//MAIN FUNCTIONS
 int parse_json_post_body(char *, char **, char **);
 
 #endif // JSON_READER_H_
