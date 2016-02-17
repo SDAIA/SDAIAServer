@@ -164,52 +164,48 @@ int mysql_request_perform_select(struct http_request *req)
     MYSQL *state = req->hdlr_extra;
 
     char *sql_statement = kore_malloc(sizeof(char) * MAX_LENGTH_QUERY);
-    char **path_tokens = NULL;
+    char *path = kore_malloc(sizeof(char) * PATH_MAX);
+    char *path_tokens[3];
     int selector = -1;
-    char *table = NULL;
-    char *id = NULL;
-    char *adm = NULL;
+    int adm = 0;
+    int tokens = 0;
+
+    //Copy req->path to a temp var.
+    strcpy(path, req->path);
 
     kore_log(LOG_DEBUG, "Building query.");
-    kore_log(LOG_DEBUG, "%s", req->path);
-    //NEED FIX: Max priority.
-    kore_split_string(req->path, "/", path_tokens, 4);
+    kore_log(LOG_DEBUG, "%s", path);
+    tokens = kore_split_string(path, "/", path_tokens, 3);
     kore_log(LOG_DEBUG, "Path splitted.");
     //Building query
-    /* *(path_tokens + 0) == API base path
-     * *(path_tokens + 1) == Table reference.
-     * *(path_tokens + 2) == Id reference.
+    /* path_tokens[0] == API base path
+     * path_tokens[1] == Table reference.
+     * path_tokens[2] == Id reference.
      * arguments == options
      */
-    if(!(*(path_tokens + 1)))
+
+    if(tokens < 2)
     {
         req->fsm_state = REQ_STATE_ERROR;
         return(HTTP_STATE_CONTINUE);
     }
 
-    table = *(path_tokens + 1);
-
-    if(*(path_tokens + 2))
-    {
-        id = *(path_tokens + 2);
-    }
-
     kore_log(LOG_DEBUG, "Checking arguments.");
-    http_argument_get_byte(req,"adm", adm);
+    http_argument_get_int16(req,"adm", &adm);
 
-    if(strcmp(table, "users"))
+    if(strcmp(path_tokens[1], "users") == 0)
     {
-        selector = USER_TABLE;
+        selector = USERS_TABLE;
     }
-    else if(strcmp(table, "groups"))
+    else if(strcmp(path_tokens[1], "groups") == 0)
     {
-        selector = GROUP_TABLE;
+        selector = GROUPS_TABLE;
     }
-    else if(strcmp(table, "permissions"))
+    else if(strcmp(path_tokens[1], "permissions") == 0)
     {
         selector = PERMISSIONS_TABLE;
     }
-    else if(strcmp(table, "applications"))
+    else if(strcmp(path_tokens[1], "applications") == 0)
     {
         selector = APPLICATIONS_TABLE;
     }
@@ -220,7 +216,7 @@ int mysql_request_perform_select(struct http_request *req)
     }
 
     strcpy(sql_statement, "SELECT ");
-    if(strcmp(adm, "true"))
+    if(adm == 1)
     {
         strcat(sql_statement, priv_cols[selector]);
     }
@@ -229,12 +225,12 @@ int mysql_request_perform_select(struct http_request *req)
         strcat(sql_statement, pub_cols[selector]);
     }
     strcat(sql_statement, " FROM ");
-    strcat(sql_statement, table);
+    strcat(sql_statement, path_tokens[1]);
     strcat(sql_statement, select_ext[selector]);
-    if(id)
+    if(tokens == 3)
     {
         strcat(sql_statement, id_str[selector]);
-        strcat(sql_statement, id);
+        strcat(sql_statement, path_tokens[2]);
     }
     strcat(sql_statement, " ;");
 
@@ -296,11 +292,11 @@ int mysql_request_perform_insert(struct http_request *req)
 
     if(strcmp(table, "users"))
     {
-        selector = USER_TABLE;
+        selector = USERS_TABLE;
     }
     else if(strcmp(table, "groups"))
     {
-        selector = GROUP_TABLE;
+        selector = GROUPS_TABLE;
     }
     else if(strcmp(table, "permissions"))
     {
@@ -372,11 +368,11 @@ int mysql_request_perform_update(struct http_request *req)
 
     if(strcmp(table, "users"))
     {
-        selector = USER_TABLE;
+        selector = USERS_TABLE;
     }
     else if(strcmp(table, "groups"))
     {
-        selector = GROUP_TABLE;
+        selector = GROUPS_TABLE;
     }
     else if(strcmp(table, "permissions"))
     {
@@ -449,11 +445,11 @@ int mysql_request_perform_delete(struct http_request *req)
 
     if(strcmp(table, "users"))
     {
-        selector = USER_TABLE;
+        selector = USERS_TABLE;
     }
     else if(strcmp(table, "groups"))
     {
-        selector = GROUP_TABLE;
+        selector = GROUPS_TABLE;
     }
     else if(strcmp(table, "permissions"))
     {

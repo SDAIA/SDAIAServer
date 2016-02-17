@@ -3,10 +3,10 @@
 const char * gen_api_info_str(char *api_name, char *api_ver, char *api_date)
 {
     //Generate JSON.
-    json_object * api_info = json_object_new_object();
-    json_object * api_name_json = json_object_new_string(api_name);
-    json_object * api_ver_json = json_object_new_string(api_ver);
-    json_object * api_date_json = json_object_new_string(api_date);
+    json_object *api_info = json_object_new_object();
+    json_object *api_name_json = json_object_new_string(api_name);
+    json_object *api_ver_json = json_object_new_string(api_ver);
+    json_object *api_date_json = json_object_new_string(api_date);
     json_object_object_add(api_info, "name", api_name_json);
     json_object_object_add(api_info, "version", api_ver_json);
     json_object_object_add(api_info, "release_date", api_date_json);
@@ -33,13 +33,13 @@ const char * gen_mysql_result(MYSQL_RES *result)
     }
 
     //Populate JSON.
-    json_object * mysql_result = json_object_new_array();
+    json_object *mysql_result = json_object_new_array();
     while((row = mysql_fetch_row(result)))
     {
-        json_object * mysql_row = json_object_new_object();
+        json_object *mysql_row = json_object_new_object();
         for(i=0; i<num_fields; i++)
         {
-            json_object * row_field;
+            json_object *row_field;
             if(row[i] == NULL)
             {
                 row_field = json_object_new_string("NULL");
@@ -66,11 +66,11 @@ const char * gen_mysql_result(MYSQL_RES *result)
 /* HTTP ERROR STATUS */
 const char * gen_api_err_forbidden(struct http_request *req)
 {
-    json_object * api_forbidden = json_object_new_object();
-    json_object * api_err_code = json_object_new_int(HTTP_STATUS_FORBIDDEN);
-    json_object * api_err_pretty = json_object_new_string(pretty_codes(HTTP_STATUS_FORBIDDEN));
-    json_object * api_method = json_object_new_string(pretty_method(req->method));
-    json_object * api_path = json_object_new_string(req->path);
+    json_object *api_forbidden = json_object_new_object();
+    json_object *api_err_code = json_object_new_int(HTTP_STATUS_FORBIDDEN);
+    json_object *api_err_pretty = json_object_new_string(pretty_codes(HTTP_STATUS_FORBIDDEN));
+    json_object *api_method = json_object_new_string(pretty_method(req->method));
+    json_object *api_path = json_object_new_string(req->path);
     json_object_object_add(api_forbidden, "status", api_err_code);
     json_object_object_add(api_forbidden, "status_str", api_err_pretty);
     json_object_object_add(api_forbidden, "method", api_method);
@@ -80,11 +80,11 @@ const char * gen_api_err_forbidden(struct http_request *req)
 
 const char * gen_api_err_notfound(struct http_request *req)
 {
-    json_object * api_not_found = json_object_new_object();
-    json_object * api_err_code = json_object_new_int(HTTP_STATUS_NOT_FOUND);
-    json_object * api_err_pretty = json_object_new_string(pretty_codes(HTTP_STATUS_NOT_FOUND));
-    json_object * api_method = json_object_new_string(pretty_method(req->method));
-    json_object * api_path = json_object_new_string(req->path);
+    json_object *api_not_found = json_object_new_object();
+    json_object *api_err_code = json_object_new_int(HTTP_STATUS_NOT_FOUND);
+    json_object *api_err_pretty = json_object_new_string(pretty_codes(HTTP_STATUS_NOT_FOUND));
+    json_object *api_method = json_object_new_string(pretty_method(req->method));
+    json_object *api_path = json_object_new_string(req->path);
     json_object_object_add(api_not_found, "status", api_err_code);
     json_object_object_add(api_not_found, "status_str", api_err_pretty);
     json_object_object_add(api_not_found, "method", api_method);
@@ -94,5 +94,18 @@ const char * gen_api_err_notfound(struct http_request *req)
 
 const char * gen_api_err_server_mysql(struct http_request *req)
 {
-    return 0;
+    MYSQL *state = req->hdlr_extra;
+
+    json_object *mysql_err = json_object_new_object();
+    json_object *api_err_code = json_object_new_int(HTTP_STATUS_INTERNAL_ERROR);
+    json_object *api_err_pretty = json_object_new_string(pretty_codes(HTTP_STATUS_INTERNAL_ERROR));
+    json_object *api_method = json_object_new_string(pretty_method(req->method));
+    json_object *api_path = json_object_new_string(req->path);
+    json_object *mysql_err_str = json_object_new_string(mysql_error(state));
+    json_object_object_add(mysql_err, "status", api_err_code);
+    json_object_object_add(mysql_err, "status_str", api_err_pretty);
+    json_object_object_add(mysql_err, "method", api_method);
+    json_object_object_add(mysql_err, "path", api_path);
+    json_object_object_add(mysql_err, "error", mysql_err_str);
+    return json_object_to_json_string_ext(mysql_err, JSON_C_TO_STRING_PRETTY);
 }

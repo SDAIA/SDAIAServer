@@ -1,14 +1,14 @@
 #include "paths.h"
 
 const char *pub_cols[] = {
-    "userid, username, create_time, GROUP_CONCAT(groupname SEPARATOR \',\')",
+    "userid AS id, username, create_time, GROUP_CONCAT(groupname SEPARATOR \',\') AS groups",
     "groupid, groupname, description",
     "*",
     "applicationid, applicationname, description, create_time, last_edit_time, framework, username, groupname"
 };
 
 const char *priv_cols[] = {
-    "userid, username, email, create_time, GROUP_CONCAT(groupname SEPARATOR \',\')",
+    "userid AS id, username, email, create_time, GROUP_CONCAT(groupname SEPARATOR \',\') AS groups",
     "*",
     "",
     "applicationid, applicationname, description, create_time, last_edit_time, framework, exec_path, data_path, username, groupname"
