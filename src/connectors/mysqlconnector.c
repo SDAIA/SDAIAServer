@@ -242,6 +242,7 @@ int mysql_request_perform_select(struct http_request *req)
         return(HTTP_STATE_CONTINUE);
     }
 
+    kore_mem_free(path);
     kore_mem_free(sql_statement);
     req->fsm_state = REQ_STATE_GETDATA;
     return(HTTP_STATE_CONTINUE);
@@ -255,7 +256,7 @@ int mysql_request_perform_getdata(struct http_request *req)
     char *json_result;
 
     result = mysql_store_result(state);
-    json_result = gen_mysql_result(result);
+    json_result = (char *)gen_mysql_result(result);
 
     http_response(req, 200, json_result, (unsigned)strlen(json_result));
 
@@ -271,38 +272,40 @@ int mysql_request_perform_insert(struct http_request *req)
     MYSQL *state = req->hdlr_extra;
 
     char *sql_statement = kore_malloc(sizeof(char) * MAX_LENGTH_QUERY);
-    char **path_tokens = NULL;
-    char *table = NULL;
-    int selector;
+    char *path = kore_malloc(sizeof(char) * PATH_MAX);
+    char *path_tokens[2];
+    int selector = -1;
+    int tokens = 0;
+
+    strcpy(path, req->path);
 
     kore_log(LOG_DEBUG, "Building query.");
-    kore_split_string(req->path, "/", path_tokens, 3);
+    kore_log(LOG_DEBUG, "%s", path);
+    tokens = kore_split_string(path, "/", path_tokens, 2);
     //Building query
-    /* *(path_tokens + 0) == API base path
-     * *(path_tokens + 1) == Table reference.
+    /* path_tokens[0] == API base path
+     * path_tokens[1] == Table reference.
      */
 
-    if(!(*(path_tokens + 1)))
+    if(tokens < 2)
     {
         req->fsm_state = REQ_STATE_ERROR;
         return(HTTP_STATE_CONTINUE);
     }
 
-    table = *(path_tokens + 1);
-
-    if(strcmp(table, "users"))
+    if(strcmp(path_tokens[1], "users") == 0)
     {
         selector = USERS_TABLE;
     }
-    else if(strcmp(table, "groups"))
+    else if(strcmp(path_tokens[1], "groups") == 0)
     {
         selector = GROUPS_TABLE;
     }
-    else if(strcmp(table, "permissions"))
+    else if(strcmp(path_tokens[1], "permissions") == 0)
     {
         selector = PERMISSIONS_TABLE;
     }
-    else if(strcmp(table, "applications"))
+    else if(strcmp(path_tokens[1], "applications") == 0)
     {
         selector = APPLICATIONS_TABLE;
     }
@@ -313,7 +316,7 @@ int mysql_request_perform_insert(struct http_request *req)
     }
 
     strcpy(sql_statement, "INSERT INTO ");
-    strcat(sql_statement, table);
+    strcat(sql_statement, path_tokens[1]);
     strcat(sql_statement, "(");
     strcat(sql_statement, pub_cols[selector]);
     strcat(sql_statement, ") VALUES(");
@@ -328,6 +331,7 @@ int mysql_request_perform_insert(struct http_request *req)
         return(HTTP_STATE_CONTINUE);
     }
 
+    kore_mem_free(path);
     kore_mem_free(sql_statement);
     req->fsm_state = REQ_STATE_DONE;
     return(HTTP_STATE_CONTINUE);
