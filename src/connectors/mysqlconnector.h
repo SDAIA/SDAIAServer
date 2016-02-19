@@ -8,6 +8,7 @@
 #include <mysql.h>
 #include <libconfig.h>
 #include <limits.h>
+#include <regex.h>
 #include "paths.h"
 #include "connectors/mysqllimits.h"
 #include "utils/jsonmessages.h"
